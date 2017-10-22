@@ -1,8 +1,9 @@
-def embolden(str):
-	return ""+str+""
-	#return str
-	#return str.upper()
-	#return "" + str.upper() + ""
-	
-def listtostr(list, conj="and"):
-	return ", ".join(list[:-1]) + " " + conj + " " + list[-1] if len(list) > 1 else list[0]
+# -*- coding: utf-8 -*-
+
+
+def embolden(s):
+    return '\002{}\002'.format(s)
+
+
+def listtostr(lst, conj="and"):
+    return ", ".join(lst[:-1]) + " " + conj + " " + lst[-1] if len(lst) > 1 else lst[0]
