@@ -55,6 +55,6 @@ REPEAT_COMMAND = "repeat"
 
 # Self-explanatory IRC-specific settings. KEY should be the empty
 # string if the channel has none.
-SERVER, PORT = 'irc.chathispano.org', 6667
+SERVER, PORT = 'irc.chathispano.com', 6667
 CHANNEL, KEY = '#asdfasdf', ''
 NICK = 'galiMatias'

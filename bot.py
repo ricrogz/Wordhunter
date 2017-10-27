@@ -10,6 +10,7 @@ import logging
 import cfg
 import chatter
 from game import WHGame
+from jaraco.stream import buffer
 from irc.bot import SingleServerIRCBot
 
 """
@@ -52,8 +53,10 @@ class WHBot(SingleServerIRCBot, WHGame):
 
     def __init__(self, channel, key, nickname, server, port=6667):
         SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
+        self.connection.buffer_class = buffer.LenientDecodingLineBuffer  # allow for latin-1 encoding
         WHGame.__init__(self)
         self.logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger.info("Initializing")
         self.rounds = 0
         self.channel = channel
@@ -80,9 +83,9 @@ class WHBot(SingleServerIRCBot, WHGame):
             if name not in getattr(cfg, "EXCLUDE_" + types.upper()):
                 try:
                     mdl = imp.load_source(name, f)
-                    getattr(self, types)[name] = getattr(mdl, plugin_type + "generator")()
+                    getattr(self, types)[name] = getattr(mdl, plugin_type.title() + "Generator")()
                 except Exception as e:
-                    self.logger.error("Error loading {} '{}': {}".format(plugin_type, name, e), file=sys.stderr)
+                    self.logger.error("Error loading {} '{}': {}".format(plugin_type, name, e))
                 else:
                     self.logger.info("Loaded {}: {}".format(plugin_type, name))
 
@@ -91,10 +94,10 @@ class WHBot(SingleServerIRCBot, WHGame):
         self.logger.info("Loading assets...")
         with open(os.path.join('data', 'CSW12mw-wh.txt'), 'r') as f:
             self.logger.info("	...word list")
-            self.words = map(lambda x: x.strip(), f.readlines())
+            self.words = list(map(lambda x: x.strip(), f.readlines()))
         with open(os.path.join('data', 'CSW12mw-wh-scores.txt'), 'r') as f:
             self.logger.info("	...scores")
-            self.scores = map(lambda x: int(x.strip()), f.readlines())
+            self.scores = list(map(lambda x: int(x.strip()), f.readlines()))
         with open(os.path.join('data', 'CSW12-defs.txt'), 'r') as f:
             self.logger.info("	...definitions")
             self.definitions = dict(map(lambda x: x.strip().split("\t", 1), f.readlines()))

@@ -14,6 +14,7 @@ from formatting import embolden, listtostr
 
 class WHGame(object):
     def __init__(self):
+        self.logger = None
         self.num_rounds = None
         self.round_time = None
         self.reset_time = None
@@ -228,8 +229,8 @@ class WHGame(object):
 
         if self.round_num != self.num_rounds:
 
-            old_merged = self.merge_data(self.oldscores.iteritems(), pos=1)
-            new_merged = self.merge_data(self.newscores.iteritems(), pos=1)
+            old_merged = self.merge_data(self.oldscores.items(), pos=1)
+            new_merged = self.merge_data(self.newscores.items(), pos=1)
             rank_changes = self.get_rank_changes(old_merged, new_merged)
 
             messages, used = [], []
@@ -263,7 +264,7 @@ class WHGame(object):
         self.output(chatter.STR_GAME_OVER)
         chatters = [chatter.STRF_FIRST_POS, chatter.STRF_SECOND_POS, chatter.STRF_THIRD_POS]
         joint_chatters = [chatter.STRF_JOINT_FIRST_POS, chatter.STRF_JOINT_SECOND_POS, chatter.STRF_JOINT_THIRD_POS]
-        new_merged = self.merge_data(self.newscores.iteritems(), pos=1)
+        new_merged = self.merge_data(self.newscores.items(), pos=1)
         top_three = self.get_top_three(new_merged)
         if top_three:
             for n in range(len(top_three)):
@@ -381,20 +382,21 @@ class WHGame(object):
         difficulty = 0  # Not yet implemented
         self.hint_indices = set([])
         randword = random.choice(self.words)
+        self.logger.debug("Chosen word is: {}".format(randword))
 
         # self round_name = "boggle"
-        self.round_name = random.choice(self.rounds.keys())
+        self.round_name = random.choice(list(self.rounds.keys()))
         gen_round = self.rounds[self.round_name].generate
         validmatch, announce, involved_letters = gen_round(randword, self.words, difficulty)
         self.answord = involved_letters
 
-        self.possible_words = filter(validmatch, self.words)
+        self.possible_words = list(filter(validmatch, self.words))
         if cfg.MODIFIER_CHANCE > 0 and random.randint(1, cfg.MODIFIER_CHANCE) == 1:
-            modifier_name = random.choice(self.modifiers.keys())
+            modifier_name = random.choice(list(self.modifiers.keys()))
             modifier = self.modifiers[modifier_name].generate
             mod_regex, mod_announce = modifier(randword, self.round_name, involved_letters, difficulty)
             if mod_regex:
-                self.possible_words = filter(mod_regex.match, self.possible_words)
+                self.possible_words = list(filter(mod_regex.match, self.possible_words))
         else:
             mod_announce = ""
             mod_regex = None
