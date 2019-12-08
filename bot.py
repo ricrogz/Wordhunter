@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-import imp
+import importlib.util
 import glob
 import logging
 
@@ -21,7 +21,10 @@ class WHBot(SingleServerIRCBot, WHGame):
 
     def __init__(self, channel, key, nickname, server, port=6667):
         SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
-        self.connection.buffer_class = buffer.LenientDecodingLineBuffer  # allow for latin-1 encoding
+
+        # allow for latin-1 encoding
+        self.connection.buffer_class = buffer.LenientDecodingLineBuffer
+
         WHGame.__init__(self)
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG)
@@ -43,22 +46,30 @@ class WHBot(SingleServerIRCBot, WHGame):
         self.logger.info("Initialization complete")
 
     def load_plugins(self, plugin_type):
-        types = plugin_type + "s"
-        setattr(self, types, {})
-        roundfiles = glob.glob(os.path.join(types, "*.py"))
-        for f in roundfiles:
+        category = f'{plugin_type}s'
+        exclusions = getattr(cfg, f'EXCLUDE_{category.upper()}')
+        generator_func = f'{plugin_type.title()}Generator'
+
+        setattr(self, category, {})
+        plugin_files = glob.glob(os.path.join(category, "*.py"))
+        for f in plugin_files:
             name = os.path.basename(f)[:-3]
-            if name not in getattr(cfg, "EXCLUDE_" + types.upper()):
-                try:
-                    mdl = imp.load_source(name, f)
-                    getattr(self, types)[name] = getattr(
-                        mdl,
-                        plugin_type.title() + "Generator")()
-                except Exception as e:
-                    self.logger.error("Error loading {} '{}': {}".format(
-                        plugin_type, name, e))
-                else:
-                    self.logger.info("Loaded {}: {}".format(plugin_type, name))
+
+            if name in exclusions:
+                self.logger.debug(
+                    f'Plugin {plugin_type} \'{name}\' is excluded.')
+                continue
+
+            try:
+                spec = importlib.util.spec_from_file_location(name, f)
+                mdl = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mdl)
+                getattr(self, category)[name] = getattr(mdl, generator_func)()
+            except Exception as e:
+                self.logger.error(
+                    f'Error loading {plugin_type} \'{name}\': {e}')
+            else:
+                self.logger.info(f'Loaded {plugin_type} \'{name}\'.')
 
     def load_assets(self):
         self.logger.info("Loading assets...")
