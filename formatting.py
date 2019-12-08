@@ -2,9 +2,12 @@
 
 
 def embolden(s):
-    return '\002{}\002'.format(s)
+    return f'\002{s}\002'
 
 
-def listtostr(lst, conj="and"):
-    return ", ".join(
-        lst[:-1]) + " " + conj + " " + lst[-1] if len(lst) > 1 else lst[0]
+def listtostr(iterable, conj="and"):
+    lst = list(iterable)
+    if len(lst) == 1:
+        return lst[0]
+    else:
+        return ', '.join(lst[:-1]) + f' {conj} {lst[-1]}'
