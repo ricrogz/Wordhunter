@@ -7,14 +7,14 @@ import random
 import threading
 from operator import itemgetter
 
-import cfg
+import config
 import chatter
 from formatting import embolden, listtostr
 
 
 class WHGame(object):
 
-    def __init__(self):
+    def __init__(self, cfg_file):
         self.logger = None
         self.num_rounds = None
         self.round_time = None
@@ -49,13 +49,20 @@ class WHGame(object):
         self.rounds = {}
         self.modifiers = {}
 
+        self.cfg = config.Config(cfg_file)
         self.reset_vars()
 
-    def set_default_params(self,
-                           num_rounds=cfg.NUM_ROUNDS,
-                           round_time=cfg.ROUND_TIME):
-        self.num_rounds = num_rounds
-        self.round_time = round_time
+    def set_default_params(self, num_rounds=None, round_time=None):
+        if num_rounds:
+            self.num_rounds = num_rounds
+        else:
+            self.num_rounds = self.cfg['NUM_ROUNDS']
+
+        if round_time:
+            self.round_time = round_time
+        else:
+            self.round_time = self.cfg['ROUND_TIME']
+
         self.set_reset_time()
 
     def set_reset_time(self):
@@ -64,7 +71,6 @@ class WHGame(object):
     def reset_vars(self):
         self.new_timer = None
         self.end_timer = None
-        # self#.podium_timer = None
         self.round_num = 0
         self.set_default_params()
         self.playing = False
@@ -91,15 +97,15 @@ class WHGame(object):
 
             # these 2 lines were commented out
             self.output(chatter.STR_SCORE_PRELUDE)
-            self.podium_timer = threading.Timer(cfg.FINAL_SCORE_DELAY,
+            self.podium_timer = threading.Timer(self.cfg['FINAL_SCORE_DELAY'],
                                                 self.final_scores)
         else:
             if self.num_rounds > 0:
                 message = chatter.STR_NEW_ROUND
             else:
                 message = chatter.STR_NEW_ROUND_UNLIMITED
-            self.output(message)
-            self.new_timer = threading.Timer(cfg.NEW_TIME, self.new_puzzle)
+            self.output(message.format(self.cfg['NEW_TIME']))
+            self.new_timer = threading.Timer(self.cfg['NEW_TIME'], self.new_puzzle)
             self.new_timer.start()
 
     def end_round(self, new_round=True):
@@ -138,8 +144,8 @@ class WHGame(object):
         if nick:
             if self.streak["nick"] == nick:
                 self.streak["num"] += 1
-                if cfg.STREAK_BONUS > 0:
-                    bonus = cfg.STREAK_BONUS * (self.streak["num"] - 1)
+                if self.cfg['STREAK_BONUS'] > 0:
+                    bonus = self.cfg['STREAK_BONUS'] * (self.streak["num"] - 1)
                     msg = chatter.STR_ON_STREAK_BONUS.format(
                         self.streak["nick"], self.streak["num"], bonus)
                 else:
@@ -386,7 +392,7 @@ class WHGame(object):
                         word, score, poss, self.winningword,
                         self.winningword_score) + " " + self.time_warning()
             self.output(msg)
-        elif cfg.DYNAMIC_HINTS and self.round_name in ["anag", "defn"]:
+        elif self.cfg['DYNAMIC_HINTS'] and self.round_name in ["anag", "defn"]:
             newindices = set([
                 i for i in range(min(len(word), len(self.answord)))
                 if word[i] == self.answord[i]
@@ -434,8 +440,8 @@ class WHGame(object):
         self.answord = involved_letters
 
         self.possible_words = list(filter(validmatch, self.words))
-        if cfg.MODIFIER_CHANCE > 0 and random.randint(1,
-                                                      cfg.MODIFIER_CHANCE) == 1:
+        if self.cfg['MODIFIER_CHANCE'] > 0 and random.randint(
+                1, self.cfg['MODIFIER_CHANCE']) == 1:
             modifier_name = random.choice(list(self.modifiers.keys()))
             modifier = self.modifiers[modifier_name].generate
             mod_regex, mod_announce = modifier(randword, self.round_name,

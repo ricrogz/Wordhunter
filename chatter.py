@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import cfg
 import random
 from constants import ORDINALS
 
@@ -62,8 +61,8 @@ STR_PLAYING = "We're already playing, {}."
 STR_NOT_PLAYING = "We aren't playing, {}."
 STR_NO_NESSES = "Sorry, {}, but all words in -ness(es) are banned."
 STR_INIT_TIME = "You have {} seconds!"
-STR_NEW_ROUND = "Next round in {} seconds...".format(cfg.NEW_TIME)
-STR_NEW_ROUND_UNLIMITED = "New round in {} seconds...".format(cfg.NEW_TIME)
+STR_NEW_ROUND = "Next round in {} seconds..."
+STR_NEW_ROUND_UNLIMITED = "New round in {} seconds..."
 STR_ROUND_NUM = "Round {} of {}."
 STR_ROUND_NUM_UNLIMITED = "Round {}."
 STR_ROUND_FINAL = "Final round!"

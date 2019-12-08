@@ -1,5 +1,4 @@
 TO DO:
-  - use yaml for config files
   - packetize
 
   - boggle 6x6

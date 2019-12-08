@@ -6,7 +6,6 @@ import importlib.util
 import glob
 import logging
 
-import cfg
 import chatter
 from game import WHGame
 from jaraco.stream import buffer
@@ -16,22 +15,25 @@ from irc.bot import SingleServerIRCBot
 class WHBot(SingleServerIRCBot, WHGame):
 
     valid_params = {"n": "num_rounds", "t": "round_time"}
-    default_params = {"n": cfg.NUM_ROUNDS, "t": cfg.ROUND_TIME}
+    default_params = {"n": 0, "t": 5}
     min_values = {"n": 0, "t": 5}
 
-    def __init__(self, channel, key, nickname, server, port=6667):
-        SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
+    def __init__(self, cfg_file):
+        WHGame.__init__(self, cfg_file)
+
+        WHBot.default_params['n'] = self.cfg['NUM_ROUNDS']
+        WHBot.default_params['t'] = self.cfg['ROUND_TIME']
+
+        SingleServerIRCBot.__init__(self, [(self.cfg['SERVER'], self.cfg['PORT'])],
+                                    self.cfg['NICK'], self.cfg['NICK'])
 
         # allow for latin-1 encoding
         self.connection.buffer_class = buffer.LenientDecodingLineBuffer
 
-        WHGame.__init__(self)
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.DEBUG)
         self.logger.info("Initializing")
         self.rounds = 0
-        self.channel = channel
-        self.key = key
 
         # Assets
         self.words = None
@@ -47,7 +49,7 @@ class WHBot(SingleServerIRCBot, WHGame):
 
     def load_plugins(self, plugin_type):
         category = f'{plugin_type}s'
-        exclusions = getattr(cfg, f'EXCLUDE_{category.upper()}')
+        exclusions = self.cfg[f'EXCLUDE_{category.upper()}']
         generator_func = f'{plugin_type.title()}Generator'
 
         setattr(self, category, {})
@@ -89,10 +91,10 @@ class WHBot(SingleServerIRCBot, WHGame):
         c.nick(c.get_nickname() + "_")
 
     def on_welcome(self, c, _):
-        c.join(self.channel, self.key)
+        c.join(self.cfg['CHANNEL'], self.cfg['KEY'])
 
     def handle_command(self, command, nick, params):
-        if command == cfg.START_COMMAND:
+        if command == self.cfg['START_COMMAND']:
             if not self.playing:
                 params = map(lambda s: s.split("=", 1), params)
                 for p in params:
@@ -100,17 +102,16 @@ class WHBot(SingleServerIRCBot, WHGame):
                         try:
                             value = int(p[1])
                             assert (value >= WHBot.min_values[p[0]])
-                        except Exception:
+                        except (AssertionError, ValueError):
                             value = WHBot.default_params[p[0]]
-                        finally:
-                            setattr(self, WHBot.valid_params[p[0]], value)
+                        setattr(self, WHBot.valid_params[p[0]], value)
                 self.set_reset_time()
                 self.start_game()
             else:
                 self.output(chatter.STR_PLAYING.format(nick))
-        elif command == cfg.REPEAT_COMMAND and self.playing:
+        elif command == self.cfg['REPEAT_COMMAND'] and self.playing:
             self.announce_puzzle(reannounce=True)
-        elif command == cfg.STOP_COMMAND:
+        elif command == self.cfg['STOP_COMMAND']:
             if self.playing:
                 self.stop_game(nick)
             else:
@@ -120,8 +121,8 @@ class WHBot(SingleServerIRCBot, WHGame):
         nick = e.source.nick
         text = e.arguments[0]
         splittext = text.split(' ')
-        if text[0:len(cfg.COMMAND_PREFIX)] == cfg.COMMAND_PREFIX:
-            command = splittext[0][len(cfg.COMMAND_PREFIX):]
+        if text[0:len(self.cfg['COMMAND_PREFIX'])] == self.cfg['COMMAND_PREFIX']:
+            command = splittext[0][len(self.cfg['COMMAND_PREFIX']):]
             self.handle_command(command, nick, splittext[1:])
         elif self.playing and self.guessing:
             word = splittext[0]
@@ -129,11 +130,11 @@ class WHBot(SingleServerIRCBot, WHGame):
         return
 
     def output(self, text):
-        self.connection.privmsg(self.channel, text)
+        self.connection.privmsg(self.cfg['CHANNEL'], text)
 
 
 def main():
-    bot = WHBot(cfg.CHANNEL, cfg.KEY, cfg.NICK, cfg.SERVER, cfg.PORT)
+    bot = WHBot('wordhunter.yaml')
     bot.start()
 
 
