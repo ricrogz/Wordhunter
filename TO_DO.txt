@@ -1,4 +1,8 @@
 TO DO:
+  - Replace imp module with importlib
+  - use yaml for config files
+  - packetize
+
   - boggle 6x6
 
   - !repeat to repeat preamble
