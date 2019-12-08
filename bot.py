@@ -3,7 +3,6 @@
 
 import os
 import imp
-import sys
 import glob
 import logging
 
@@ -12,7 +11,6 @@ import chatter
 from game import WHGame
 from jaraco.stream import buffer
 from irc.bot import SingleServerIRCBot
-
 """
 TODO:
   - boggle 6x6
@@ -83,12 +81,14 @@ class WHBot(SingleServerIRCBot, WHGame):
             if name not in getattr(cfg, "EXCLUDE_" + types.upper()):
                 try:
                     mdl = imp.load_source(name, f)
-                    getattr(self, types)[name] = getattr(mdl, plugin_type.title() + "Generator")()
+                    getattr(self, types)[name] = getattr(
+                        mdl,
+                        plugin_type.title() + "Generator")()
                 except Exception as e:
-                    self.logger.error("Error loading {} '{}': {}".format(plugin_type, name, e))
+                    self.logger.error("Error loading {} '{}': {}".format(
+                        plugin_type, name, e))
                 else:
                     self.logger.info("Loaded {}: {}".format(plugin_type, name))
-
 
     def load_assets(self):
         self.logger.info("Loading assets...")
@@ -100,17 +100,15 @@ class WHBot(SingleServerIRCBot, WHGame):
             self.scores = list(map(lambda x: int(x.strip()), f.readlines()))
         with open(os.path.join('data', 'CSW12-defs.txt'), 'r') as f:
             self.logger.info("	...definitions")
-            self.definitions = dict(map(lambda x: x.strip().split("\t", 1), f.readlines()))
+            self.definitions = dict(
+                map(lambda x: x.strip().split("\t", 1), f.readlines()))
         self.scored_words = dict(zip(self.words, self.scores))
-
 
     def on_nicknameinuse(self, c, _):
         c.nick(c.get_nickname() + "_")
 
-
     def on_welcome(self, c, _):
         c.join(self.channel, self.key)
-
 
     def handle_command(self, command, nick, params):
         if command == cfg.START_COMMAND:
@@ -130,13 +128,12 @@ class WHBot(SingleServerIRCBot, WHGame):
             else:
                 self.output(chatter.STR_PLAYING.format(nick))
         elif command == cfg.REPEAT_COMMAND and self.playing:
-                self.announce_puzzle(reannounce=True)
+            self.announce_puzzle(reannounce=True)
         elif command == cfg.STOP_COMMAND:
             if self.playing:
                 self.stop_game(nick)
             else:
                 self.output(chatter.STR_NOT_PLAYING.format(nick))
-
 
     def on_pubmsg(self, c, e):
         nick = e.source.nick
@@ -149,7 +146,6 @@ class WHBot(SingleServerIRCBot, WHGame):
             word = splittext[0]
             self.submit_word(word, nick)
         return
-
 
     def output(self, text):
         self.connection.privmsg(self.channel, text)

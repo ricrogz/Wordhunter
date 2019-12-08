@@ -6,11 +6,11 @@ ROUND_TIME = 50
 
 # If the first correct answer submitted is after RESET_TIME
 # seconds, the timer is reset to this value to stop sniping.
-RESET_TIME = ROUND_TIME/2
+RESET_TIME = ROUND_TIME / 2
 
 # Length of time (in seconds) to wait between the end of the final
 # round and the announcement of the final scores. (Not currently in use.)
-FINAL_SCORE_DELAY = RESET_TIME/2
+FINAL_SCORE_DELAY = RESET_TIME / 2
 
 # Default number of rounds to play each game. Can be overridden
 # by passing n=# with the start command.

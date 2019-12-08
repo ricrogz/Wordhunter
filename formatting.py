@@ -6,4 +6,5 @@ def embolden(s):
 
 
 def listtostr(lst, conj="and"):
-    return ", ".join(lst[:-1]) + " " + conj + " " + lst[-1] if len(lst) > 1 else lst[0]
+    return ", ".join(
+        lst[:-1]) + " " + conj + " " + lst[-1] if len(lst) > 1 else lst[0]

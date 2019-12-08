@@ -7,7 +7,8 @@ cache = {}
 
 def discrete_sample(dist, num):
     """
-    Simulate a discrete probability distribution (provided as a list of (item,prob) tuples) by calculating its CDF.
+    Simulate a discrete probability distribution (provided as a list of
+    (item,prob) tuples) by calculating its CDF.
     """
     items = []
     for i in range(num):
@@ -23,6 +24,7 @@ def discrete_sample(dist, num):
             items.append(dist[-1][0])
     return items
 
+
 #  http://stackoverflow.com/questions/2161406/how-do-i-generate-a-uniform-random-integer-partition
 
 
@@ -31,7 +33,9 @@ def count_partitions(n, limit):
         return 1
     if (n, limit) in cache:
         return cache[n, limit]
-    x = cache[n, limit] = sum(count_partitions(n-k, k) for k in range(1, min(limit, n) + 1))
+    x = cache[n, limit] = sum(
+        count_partitions(n - k, k) for k in range(1,
+                                                  min(limit, n) + 1))
     return x
 
 
@@ -42,7 +46,7 @@ def random_partition(n):
     which = random.randrange(total)
     while n:
         for k in range(1, min(limit, n) + 1):
-            count = count_partitions(n-k, k)
+            count = count_partitions(n - k, k)
             if which < count:
                 break
             which -= count
