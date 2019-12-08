@@ -13,9 +13,9 @@ class RoundGenerator(object):
 
     def __init__(self):
         with open(os.path.join('data', 'WN-nouns.txt'), 'r') as f:
-            self.wn_words = map(lambda x: x.strip(), f.readlines())
+            self.wn_words = [w.strip() for w in f.readlines()]
         with open(os.path.join('data', 'WN-nouns-defs.txt'), 'r') as f:
-            self.wn_defs = map(lambda x: x.strip(), f.readlines())
+            self.wn_defs = [w.strip() for w in f.readlines()]
 
     def generate(self, word, words, difficulty):
         r = random.randint(0, len(self.wn_words))
